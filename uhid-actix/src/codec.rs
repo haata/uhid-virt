@@ -80,7 +80,7 @@ pub enum InputEvent {
         product: u32,
         version: u32,
         country: u32,
-        data: ArrayVec<[u8; sys::HID_MAX_DESCRIPTOR_SIZE as usize]>,
+        rd_data: ArrayVec<[u8; sys::HID_MAX_DESCRIPTOR_SIZE as usize]>,
     },
     Destroy,
     Input {
@@ -111,7 +111,7 @@ impl Into<sys::uhid_event> for InputEvent {
                 product,
                 version,
                 country,
-                data,
+                rd_data,
             } => {
                 event.type_ = sys::uhid_event_type_UHID_CREATE2 as u32;
                 unsafe {
@@ -119,8 +119,8 @@ impl Into<sys::uhid_event> for InputEvent {
                     name.as_bytes().iter().enumerate().for_each(|(i, x)| payload.name[i] = *x);
                     phys.as_bytes().iter().enumerate().for_each(|(i, x)| payload.phys[i] = *x);
                     uniq.as_bytes().iter().enumerate().for_each(|(i, x)| payload.uniq[i] = *x);
-                    data.iter().enumerate().for_each(|(i, x)| payload.rd_data[i] = *x);
-                    payload.rd_size = data.len() as u16;
+                    rd_data.iter().enumerate().for_each(|(i, x)| payload.rd_data[i] = *x);
+                    payload.rd_size = rd_data.len() as u16;
                     payload.bus = bus as u16;
                     payload.vendor = vendor;
                     payload.product = product;
@@ -464,8 +464,8 @@ mod tests {
         expected[363] = 0x01;
         expected[364] = 0xc0;
 
-        let mut data = ArrayVec::new();
-        RDESC.iter().for_each(|x| data.try_push(*x).unwrap());
+        let mut rd_data = ArrayVec::new();
+        RDESC.iter().for_each(|x| rd_data.try_push(*x).unwrap());
         let result: Vec<u8> = InputEvent::Create {
             name: ArrayString::from("test-uhid-device").unwrap(),
             phys: ArrayString::from("").unwrap(),
@@ -475,7 +475,7 @@ mod tests {
             product: 0x0a37,
             version: 0,
             country: 0,
-            data,
+            rd_data,
         }
         .into();
 

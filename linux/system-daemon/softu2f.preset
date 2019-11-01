@@ -1,4 +1,0 @@
-# This file is part of softu2f-system-daemon
-
-enable softu2f.service
-enable softu2f.socket

@@ -93,7 +93,7 @@ where
     }
 
     /// Send a 'destroy' to the UHID device and close it
-    pub fn destroy(mut self) -> Result<(), <Codec as Encoder>::Error> {
+    pub fn destroy(&mut self) -> Result<(), <Codec as Encoder>::Error> {
         debug!(self.logger, "destroy");
         self.inner.send(InputEvent::Destroy)?;
         self.inner.close()?;

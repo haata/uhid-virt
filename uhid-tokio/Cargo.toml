@@ -17,4 +17,4 @@ slog-stdlog = "4"
 tokio = "0.1"
 tokio-io = "0.1"
 tokio-proto = "0.1"
-uhid-sys = "1"
+uhid-sys = { path = "../uhid-sys", version = "1.0.0" }

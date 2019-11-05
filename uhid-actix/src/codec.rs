@@ -1,5 +1,4 @@
-use std::convert::{TryFrom, TryInto};
-use std::io;
+use std::convert::TryFrom;
 use std::mem;
 use std::slice;
 
@@ -20,8 +19,7 @@ pub enum DevFlags {
     InputReportsNumbered = 0b0000_0100,
 }
 
-#[allow(non_camel_case_types)]
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ReportType {
     Feature = 0,
     Output = 1,
@@ -233,14 +231,6 @@ impl TryFrom<sys::uhid_event> for OutputEvent {
             Err(StreamError::UnknownEventType(event.type_))
         }
     }
-}
-
-fn encode_event(event: &sys::uhid_event) -> &[u8] {
-    unsafe { as_u8_slice(event) }
-}
-
-unsafe fn as_u8_slice<T: Sized>(p: &T) -> &[u8] {
-    slice::from_raw_parts((p as *const T) as *const u8, mem::size_of::<T>())
 }
 
 fn to_uhid_event_type(value: u32) -> Option<sys::uhid_event_type> {

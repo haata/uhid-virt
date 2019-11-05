@@ -311,6 +311,7 @@ version = "0.1.0"
 dependencies = [
  "arrayvec 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "enumflags2 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.65 (registry+https://github.com/rust-lang/crates.io-index)",
  "uhid-sys 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

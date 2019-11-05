@@ -7,6 +7,8 @@ use enumflags2::BitFlags;
 
 use uhid_sys as sys;
 
+use crate::uhid_device::CreateParams;
+
 pub enum StreamError {
     UnknownEventType(u32),
 }
@@ -26,6 +28,7 @@ pub enum ReportType {
     Input = 2,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
 #[allow(non_camel_case_types)]
 pub enum Bus {
     PCI = 1,
@@ -53,17 +56,7 @@ pub enum Bus {
 }
 
 pub enum InputEvent {
-    Create {
-        name: ArrayString<[u8; 128]>,
-        phys: ArrayString<[u8; 64]>,
-        uniq: ArrayString<[u8; 64]>,
-        bus: Bus,
-        vendor: u32,
-        product: u32,
-        version: u32,
-        country: u32,
-        rd_data: ArrayVec<[u8; sys::HID_MAX_DESCRIPTOR_SIZE as usize]>,
-    },
+    Create(CreateParams),
     Destroy,
     Input {
         data: ArrayVec<[u8; sys::UHID_DATA_MAX as usize]>,
@@ -84,7 +77,7 @@ impl Into<sys::uhid_event> for InputEvent {
         let mut event: sys::uhid_event = unsafe { mem::zeroed() };
 
         match self {
-            InputEvent::Create {
+            InputEvent::Create(CreateParams {
                 name,
                 phys,
                 uniq,
@@ -94,7 +87,7 @@ impl Into<sys::uhid_event> for InputEvent {
                 version,
                 country,
                 rd_data,
-            } => {
+            }) => {
                 event.type_ = sys::uhid_event_type_UHID_CREATE2 as u32;
                 let payload = unsafe { &mut event.u.create2 };
                 name.as_bytes()
@@ -242,7 +235,7 @@ fn to_uhid_event_type(value: u32) -> Option<sys::uhid_event_type> {
     }
 }
 
-const UHID_EVENT_SIZE: usize = mem::size_of::<sys::uhid_event>();
+pub const UHID_EVENT_SIZE: usize = mem::size_of::<sys::uhid_event>();
 
 impl TryFrom<&[u8; UHID_EVENT_SIZE]> for OutputEvent {
     type Error = StreamError;
@@ -431,7 +424,7 @@ mod tests {
 
         let mut rd_data = ArrayVec::new();
         RDESC.iter().for_each(|x| rd_data.try_push(*x).unwrap());
-        let result: [u8; UHID_EVENT_SIZE] = InputEvent::Create {
+        let result: [u8; UHID_EVENT_SIZE] = InputEvent::Create(CreateParams {
             name: ArrayString::from("test-uhid-device").unwrap(),
             phys: ArrayString::from("").unwrap(),
             uniq: ArrayString::from("").unwrap(),
@@ -441,7 +434,7 @@ mod tests {
             version: 0,
             country: 0,
             rd_data,
-        }
+        })
         .into();
 
         assert_bytes_eq(&result[..], &expected);

@@ -10,6 +10,7 @@ use uhid_sys as sys;
 use crate::uhid_device::CreateParams;
 
 pub enum StreamError {
+    Io(std::io::Error),
     UnknownEventType(u32),
 }
 

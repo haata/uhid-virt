@@ -7,7 +7,7 @@ description = "Interface to Linux UHID (user-space HID transport drivers)"
 repository = "https://github.com/sameer/uhid-fs"
 license = "MIT OR Apache-2.0"
 keywords = ["hid", "uhid", "linux", "userspace", "transport"]
-catergories = ["os", "os::unix-apis"]
+categories = ["os", "os::unix-apis"]
 exclude = [
     ".travis.yml"
 ]

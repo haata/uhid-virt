@@ -255,6 +255,7 @@ impl Into<[u8; UHID_EVENT_SIZE]> for InputEvent {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use arrayvec::ArrayString;
 
     const RDESC: [u8; 85] = [
         0x05, 0x01, /* USAGE_PAGE (Generic Desktop) */

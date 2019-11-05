@@ -2,7 +2,7 @@ use std::convert::TryFrom;
 use std::mem;
 use std::slice;
 
-use arrayvec::{ArrayString, ArrayVec};
+use arrayvec::ArrayVec;
 use enumflags2::BitFlags;
 
 use uhid_sys as sys;
@@ -55,6 +55,8 @@ pub enum Bus {
     CEC = 30,
     INTEL_ISHTP = 31,
 }
+
+pub const UHID_EVENT_SIZE: usize = mem::size_of::<sys::uhid_event>();
 
 pub enum InputEvent {
     Create(CreateParams),
@@ -168,6 +170,15 @@ pub enum OutputEvent {
     },
 }
 
+fn to_uhid_event_type(value: u32) -> Option<sys::uhid_event_type> {
+    let last_valid_value = sys::uhid_event_type_UHID_SET_REPORT_REPLY as u32;
+    if value <= last_valid_value {
+        Some(value)
+    } else {
+        None
+    }
+}
+
 impl TryFrom<sys::uhid_event> for OutputEvent {
     type Error = StreamError;
     fn try_from(event: sys::uhid_event) -> Result<Self, Self::Error> {
@@ -226,17 +237,6 @@ impl TryFrom<sys::uhid_event> for OutputEvent {
         }
     }
 }
-
-fn to_uhid_event_type(value: u32) -> Option<sys::uhid_event_type> {
-    let last_valid_value = sys::uhid_event_type_UHID_SET_REPORT_REPLY as u32;
-    if value <= last_valid_value {
-        Some(value)
-    } else {
-        None
-    }
-}
-
-pub const UHID_EVENT_SIZE: usize = mem::size_of::<sys::uhid_event>();
 
 impl TryFrom<&[u8; UHID_EVENT_SIZE]> for OutputEvent {
     type Error = StreamError;

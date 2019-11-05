@@ -41,7 +41,7 @@ impl<T: Read + Write> UHIDDevice<T> {
         let mut event = [0; UHID_EVENT_SIZE];
         self.handle
             .read_exact(&mut event)
-            .map_err(|err| StreamError::Io(err))?;
+            .map_err(StreamError::Io)?;
         OutputEvent::try_from(&event)
     }
 
@@ -62,9 +62,9 @@ impl UHIDDevice<File> {
         if cfg!(unix) {
             options.custom_flags(libc::O_RDWR | libc::O_CLOEXEC | libc::O_NONBLOCK);
         }
-        let mut handle = options.open(path).unwrap();
+        let mut handle = options.open(path)?;
         let event: [u8; UHID_EVENT_SIZE] = InputEvent::Create(params).into();
-        handle.write(&event).unwrap();
+        handle.write_all(&event)?;
         Ok(UHIDDevice { handle })
     }
 }

@@ -7,6 +7,8 @@ description = "Wrapper around UHID"
 repository = "https://github.com/sameer/uhid-fs"
 documentation = "https://www.kernel.org/doc/html/latest/hid/uhid.html"
 license = "MIT OR Apache-2.0"
+keywords = ["hid", "uhid", "linux", "userspace", "transport"]
+catergories = ["os", "os::unix-apis"]
 
 [dependencies]
 uhid-sys = "1"

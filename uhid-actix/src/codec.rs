@@ -1,6 +1,5 @@
 use std::convert::TryFrom;
 use std::io;
-use std::iter::repeat;
 use std::mem;
 use std::slice;
 
@@ -114,46 +113,46 @@ impl Into<sys::uhid_event> for InputEvent {
                 rd_data,
             } => {
                 event.type_ = sys::uhid_event_type_UHID_CREATE2 as u32;
-                unsafe {
-                    let payload = &mut event.u.create2;
-                    name.as_bytes().iter().enumerate().for_each(|(i, x)| payload.name[i] = *x);
-                    phys.as_bytes().iter().enumerate().for_each(|(i, x)| payload.phys[i] = *x);
-                    uniq.as_bytes().iter().enumerate().for_each(|(i, x)| payload.uniq[i] = *x);
-                    rd_data.iter().enumerate().for_each(|(i, x)| payload.rd_data[i] = *x);
-                    payload.rd_size = rd_data.len() as u16;
-                    payload.bus = bus as u16;
-                    payload.vendor = vendor;
-                    payload.product = product;
-                    payload.version = version;
-                    payload.country = country;
-                }
+                let payload = unsafe {
+                    &mut event.u.create2
+                };
+                name.as_bytes().iter().enumerate().for_each(|(i, x)| payload.name[i] = *x);
+                phys.as_bytes().iter().enumerate().for_each(|(i, x)| payload.phys[i] = *x);
+                uniq.as_bytes().iter().enumerate().for_each(|(i, x)| payload.uniq[i] = *x);
+                rd_data.iter().enumerate().for_each(|(i, x)| payload.rd_data[i] = *x);
+                payload.rd_size = rd_data.len() as u16;
+                payload.bus = bus as u16;
+                payload.vendor = vendor;
+                payload.product = product;
+                payload.version = version;
+                payload.country = country;
             }
             InputEvent::Destroy => {
                 event.type_ = sys::uhid_event_type_UHID_DESTROY as u32;
             }
             InputEvent::Input { data } => {
                 event.type_ = sys::uhid_event_type_UHID_INPUT2 as u32;
-                unsafe {
-                    let payload = &mut event.u.input2;
-                    data.iter().enumerate().for_each(|(i, x)| payload.data[i] = *x);
-                    payload.size = data.len() as u16;
-                }
+                let payload = unsafe {
+                    &mut event.u.input2
+                };
+                data.iter().enumerate().for_each(|(i, x)| payload.data[i] = *x);
+                payload.size = data.len() as u16;
             }
             InputEvent::GetReportReply { err, data, .. } => {
                 event.type_ = sys::uhid_event_type_UHID_GET_REPORT_REPLY as u32;
-                unsafe {
-                    let payload = &mut event.u.get_report_reply;
-                    payload.err = err;
-                    data.iter().enumerate().for_each(|(i, x)| payload.data[i] = *x);
-                    payload.size = data.len() as u16;
-                }
+                let payload = unsafe {
+                    &mut event.u.get_report_reply
+                };
+                payload.err = err;
+                data.iter().enumerate().for_each(|(i, x)| payload.data[i] = *x);
+                payload.size = data.len() as u16;
             }
             InputEvent::SetReportReply { err, .. } => {
                 event.type_ = sys::uhid_event_type_UHID_SET_REPORT_REPLY as u32;
-                unsafe {
-                    let payload = &mut event.u.set_report_reply;
-                    payload.err = err;
-                }
+                let payload = unsafe {
+                    &mut event.u.set_report_reply
+                };
+                payload.err = err;
             }
         };
 

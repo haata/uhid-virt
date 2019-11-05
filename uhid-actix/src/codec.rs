@@ -15,13 +15,13 @@ pub enum StreamError {
 }
 
 struct DevFlags {
-    flags: u64
+    flags: u64,
 }
 
 impl DevFlags {
-// const NUMBERED_FEATURE_REPORTS: DevFlags = 0b0000_0001;
-// const NUMBERED_OUTPUT_REPORTS: DevFlags = 0b0000_0010;
-// const NUMBERED_INPUT_REPORTS: DevFlags = 0b0000_0100;
+    // const NUMBERED_FEATURE_REPORTS: DevFlags = 0b0000_0001;
+    // const NUMBERED_OUTPUT_REPORTS: DevFlags = 0b0000_0010;
+    // const NUMBERED_INPUT_REPORTS: DevFlags = 0b0000_0100;
     fn feature_reports_numbered(&self) -> bool {
         self.flags % 2 == 1
     }
@@ -113,13 +113,23 @@ impl Into<sys::uhid_event> for InputEvent {
                 rd_data,
             } => {
                 event.type_ = sys::uhid_event_type_UHID_CREATE2 as u32;
-                let payload = unsafe {
-                    &mut event.u.create2
-                };
-                name.as_bytes().iter().enumerate().for_each(|(i, x)| payload.name[i] = *x);
-                phys.as_bytes().iter().enumerate().for_each(|(i, x)| payload.phys[i] = *x);
-                uniq.as_bytes().iter().enumerate().for_each(|(i, x)| payload.uniq[i] = *x);
-                rd_data.iter().enumerate().for_each(|(i, x)| payload.rd_data[i] = *x);
+                let payload = unsafe { &mut event.u.create2 };
+                name.as_bytes()
+                    .iter()
+                    .enumerate()
+                    .for_each(|(i, x)| payload.name[i] = *x);
+                phys.as_bytes()
+                    .iter()
+                    .enumerate()
+                    .for_each(|(i, x)| payload.phys[i] = *x);
+                uniq.as_bytes()
+                    .iter()
+                    .enumerate()
+                    .for_each(|(i, x)| payload.uniq[i] = *x);
+                rd_data
+                    .iter()
+                    .enumerate()
+                    .for_each(|(i, x)| payload.rd_data[i] = *x);
                 payload.rd_size = rd_data.len() as u16;
                 payload.bus = bus as u16;
                 payload.vendor = vendor;
@@ -132,26 +142,24 @@ impl Into<sys::uhid_event> for InputEvent {
             }
             InputEvent::Input { data } => {
                 event.type_ = sys::uhid_event_type_UHID_INPUT2 as u32;
-                let payload = unsafe {
-                    &mut event.u.input2
-                };
-                data.iter().enumerate().for_each(|(i, x)| payload.data[i] = *x);
+                let payload = unsafe { &mut event.u.input2 };
+                data.iter()
+                    .enumerate()
+                    .for_each(|(i, x)| payload.data[i] = *x);
                 payload.size = data.len() as u16;
             }
             InputEvent::GetReportReply { err, data, .. } => {
                 event.type_ = sys::uhid_event_type_UHID_GET_REPORT_REPLY as u32;
-                let payload = unsafe {
-                    &mut event.u.get_report_reply
-                };
+                let payload = unsafe { &mut event.u.get_report_reply };
                 payload.err = err;
-                data.iter().enumerate().for_each(|(i, x)| payload.data[i] = *x);
+                data.iter()
+                    .enumerate()
+                    .for_each(|(i, x)| payload.data[i] = *x);
                 payload.size = data.len() as u16;
             }
             InputEvent::SetReportReply { err, .. } => {
                 event.type_ = sys::uhid_event_type_UHID_SET_REPORT_REPLY as u32;
-                let payload = unsafe {
-                    &mut event.u.set_report_reply
-                };
+                let payload = unsafe { &mut event.u.set_report_reply };
                 payload.err = err;
             }
         };
@@ -267,7 +275,6 @@ fn read_event(src: &mut [u8]) -> Option<sys::uhid_event> {
         None
     }
 }
-
 
 // TODO: Use a legit error here
 impl TryFrom<Vec<u8>> for OutputEvent {

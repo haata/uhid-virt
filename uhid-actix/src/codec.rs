@@ -332,7 +332,7 @@ mod tests {
 
     #[test]
     fn encode_create_request() {
-        let mut expected = vec![0; mem::size_of::<sys::uhid_event>()];
+        let mut expected = [0; UHID_EVENT_SIZE];
         expected[0] = 0x0b;
         expected[4] = 0x74;
         expected[5] = 0x65;

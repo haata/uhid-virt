@@ -9,6 +9,9 @@ documentation = "https://www.kernel.org/doc/html/latest/hid/uhid.html"
 license = "MIT OR Apache-2.0"
 keywords = ["hid", "uhid", "linux", "userspace", "transport"]
 catergories = ["os", "os::unix-apis"]
+exclude = [
+    ".travis.yml"
+]
 
 [dependencies]
 uhid-sys = "1"

@@ -14,7 +14,7 @@ pub struct UHIDDevice<T: Read + Write> {
     handle: T,
 }
 
-/// Parameters used to create UHID devices
+/// Contains information about your HID device, sent when UHIDDevice is created
 #[derive(Debug, Clone, PartialEq)]
 pub struct CreateParams {
     pub name: ArrayString<[u8; 128]>,
@@ -28,7 +28,9 @@ pub struct CreateParams {
     pub rd_data: ArrayVec<[u8; sys::HID_MAX_DESCRIPTOR_SIZE as usize]>,
 }
 
+/// Character misc-device handle for a specific HID device
 impl<T: Read + Write> UHIDDevice<T> {
+    /// The data parameter should contain a data-payload. This is the raw data that you read from your device. The kernel will parse the HID reports.
     pub fn send_input(
         &mut self,
         data: ArrayVec<[u8; sys::UHID_DATA_MAX as usize]>,
@@ -37,6 +39,7 @@ impl<T: Read + Write> UHIDDevice<T> {
         self.handle.write(&event)
     }
 
+    /// Reads a queued output event. No reaction is required to an output event, but you should handle them according to your needs.
     pub fn recv_output(&mut self) -> Result<OutputEvent, StreamError> {
         let mut event = [0; UHID_EVENT_SIZE];
         self.handle
@@ -45,6 +48,7 @@ impl<T: Read + Write> UHIDDevice<T> {
         OutputEvent::try_from(&event)
     }
 
+    /// This destroys the internal HID device. No further I/O will be accepted. There may still be pending output events that you can receive but no further input events can be sent to the kernel.
     pub fn destroy(&mut self) -> io::Result<usize> {
         let event: [u8; UHID_EVENT_SIZE] = InputEvent::Destroy.into();
         self.handle.write(&event)
@@ -52,6 +56,7 @@ impl<T: Read + Write> UHIDDevice<T> {
 }
 
 impl UHIDDevice<File> {
+    /// Opens the character misc-device at /dev/uhid
     pub fn try_new(params: CreateParams) -> io::Result<UHIDDevice<File>> {
         UHIDDevice::try_new_with_path(params, Path::new("/dev/uhid"))
     }
@@ -60,7 +65,7 @@ impl UHIDDevice<File> {
         options.read(true);
         options.write(true);
         if cfg!(unix) {
-            options.custom_flags(libc::O_RDWR | libc::O_CLOEXEC | libc::O_NONBLOCK);
+            options.custom_flags(libc::O_RDWR | libc::O_CLOEXEC);
         }
         let mut handle = options.open(path)?;
         let event: [u8; UHID_EVENT_SIZE] = InputEvent::Create(params).into();

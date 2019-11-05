@@ -14,6 +14,9 @@ pub enum StreamError {
     UnknownEventType(u32),
 }
 
+/// Each of these flags defines whether a given report-type uses numbered reports. 
+/// If numbered reports are used for a type, all messages from the kernel already have the report-number as prefix. Otherwise, no prefix is added by the kernel. 
+/// For messages sent by user-space to the kernel, you must adjust the prefixes according to these flags.
 #[derive(BitFlags, Copy, Clone, PartialEq)]
 #[repr(u64)]
 pub enum DevFlags {
@@ -29,6 +32,7 @@ pub enum ReportType {
     Input = 2,
 }
 
+/// See https://elixir.bootlin.com/linux/latest/ident/BUS_INTEL_ISHTP
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[allow(non_camel_case_types)]
 pub enum Bus {
@@ -58,6 +62,7 @@ pub enum Bus {
 
 pub const UHID_EVENT_SIZE: usize = mem::size_of::<sys::uhid_event>();
 
+/// See https://www.kernel.org/doc/html/latest/hid/uhid.html#write
 pub enum InputEvent {
     Create(CreateParams),
     Destroy,
@@ -147,6 +152,7 @@ impl Into<sys::uhid_event> for InputEvent {
     }
 }
 
+/// See https://www.kernel.org/doc/html/latest/hid/uhid.html#read
 pub enum OutputEvent {
     Start {
         dev_flags: Vec<DevFlags>,

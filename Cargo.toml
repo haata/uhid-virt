@@ -3,15 +3,17 @@ name = "uhid-fs"
 version = "0.0.1"
 authors = ["Sameer Puri <purisame@spuri.io>", "Daniel Stiner <danstiner@gmail.com>"]
 edition = "2018"
-description = "Wrapper around UHID"
+description = "Interface to Linux UHID (user-space HID transport drivers)"
 repository = "https://github.com/sameer/uhid-fs"
-documentation = "https://www.kernel.org/doc/html/latest/hid/uhid.html"
 license = "MIT OR Apache-2.0"
 keywords = ["hid", "uhid", "linux", "userspace", "transport"]
 catergories = ["os", "os::unix-apis"]
 exclude = [
     ".travis.yml"
 ]
+
+[lib]
+doc = true
 
 [dependencies]
 uhid-sys = "1"

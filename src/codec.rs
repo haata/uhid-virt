@@ -9,6 +9,8 @@ use uhid_sys as sys;
 
 use crate::uhid_device::CreateParams;
 
+/// Any IO error will probably be 'permission-denied' if you don't have access to open /dev/uhid
+/// An unknown event type error should only occur if a new event has been added to `uhid-sys` that this wrapper is unaware of.
 pub enum StreamError {
     Io(std::io::Error),
     UnknownEventType(u32),
@@ -25,6 +27,7 @@ pub enum DevFlags {
     InputReportsNumbered = 0b0000_0100,
 }
 
+/// See https://www.kernel.org/doc/html/latest/hid/uhid.html#read
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ReportType {
     Feature = 0,

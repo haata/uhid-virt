@@ -1,4 +1,4 @@
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 use std::io;
 use std::mem;
 use std::slice;
@@ -9,10 +9,7 @@ use enumflags2::BitFlags;
 use uhid_sys as sys;
 
 pub enum StreamError {
-    Io { err: io::Error },
-    UnknownEventType { event_type_value: u32 },
-    BufferOverflow { data_size: usize, max_size: usize },
-    Unknown,
+    UnknownEventType(u32),
 }
 
 #[derive(BitFlags, Copy, Clone, PartialEq)]
@@ -180,8 +177,8 @@ pub enum OutputEvent {
 }
 
 impl TryFrom<sys::uhid_event> for OutputEvent {
-    type Error = u32;
-    fn try_from(event: sys::uhid_event) -> Result<OutputEvent, u32> {
+    type Error = StreamError;
+    fn try_from(event: sys::uhid_event) -> Result<Self, Self::Error> {
         if let Some(event_type) = to_uhid_event_type(event.type_) {
             match event_type {
                 sys::uhid_event_type_UHID_START => Ok(unsafe {
@@ -230,10 +227,10 @@ impl TryFrom<sys::uhid_event> for OutputEvent {
                         .to_vec(),
                     }
                 }),
-                _ => Err(event.type_),
+                _ => Err(StreamError::UnknownEventType(event.type_)),
             }
         } else {
-            Err(event.type_)
+            Err(StreamError::UnknownEventType(event.type_))
         }
     }
 }
@@ -255,37 +252,19 @@ fn to_uhid_event_type(value: u32) -> Option<sys::uhid_event_type> {
     }
 }
 
-fn read_event(src: &mut [u8]) -> Option<sys::uhid_event> {
-    let uhid_event_size = mem::size_of::<sys::uhid_event>();
-    if src.len() >= uhid_event_size {
-        let bytes = Vec::from(&src[..=uhid_event_size]);
-        let ptr = bytes.as_ptr();
-        Some(unsafe { *(ptr as *const sys::uhid_event) })
-    } else {
-        None
+const UHID_EVENT_SIZE: usize = mem::size_of::<sys::uhid_event>();
+
+impl TryFrom<&[u8; UHID_EVENT_SIZE]> for OutputEvent {
+    type Error = StreamError;
+    fn try_from(src: &[u8; UHID_EVENT_SIZE]) -> Result<Self, Self::Error> {
+        OutputEvent::try_from(unsafe { *(src.as_ptr() as *const sys::uhid_event) })
     }
 }
 
-// TODO: Use a legit error here
-impl TryFrom<Vec<u8>> for OutputEvent {
-    type Error = u32;
-    fn try_from(mut vec: Vec<u8>) -> Result<Self, Self::Error> {
-        if let Some(event) = read_event(&mut vec) {
-            OutputEvent::try_from(event)
-        } else {
-            Err(0)
-        }
-    }
-
-    // fn read_len(&self) -> usize {
-    //     mem::size_of::<sys::uhid_event>()
-    // }
-}
-
-impl Into<Vec<u8>> for InputEvent {
-    fn into(self) -> Vec<u8> {
-        let event = self.into();
-        Vec::from(encode_event(&event))
+impl Into<[u8; UHID_EVENT_SIZE]> for InputEvent {
+    fn into(self) -> [u8; UHID_EVENT_SIZE] {
+        let event: sys::uhid_event = self.into();
+        unsafe { mem::transmute_copy(&event) }
     }
 }
 
@@ -462,7 +441,7 @@ mod tests {
 
         let mut rd_data = ArrayVec::new();
         RDESC.iter().for_each(|x| rd_data.try_push(*x).unwrap());
-        let result: Vec<u8> = InputEvent::Create {
+        let result: [u8; UHID_EVENT_SIZE] = InputEvent::Create {
             name: ArrayString::from("test-uhid-device").unwrap(),
             phys: ArrayString::from("").unwrap(),
             uniq: ArrayString::from("").unwrap(),
@@ -483,7 +462,7 @@ mod tests {
         let mut expected = vec![0; mem::size_of::<sys::uhid_event>()];
         expected[0] = 0x01;
 
-        let result: Vec<u8> = InputEvent::Destroy.into();
+        let result: [u8; UHID_EVENT_SIZE] = InputEvent::Destroy.into();
         assert_bytes_eq(&result[..], &expected);
     }
 }

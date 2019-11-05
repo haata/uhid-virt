@@ -4,6 +4,7 @@ use std::mem;
 use std::slice;
 
 use arrayvec::{ArrayString, ArrayVec};
+use enumflags2::BitFlags;
 
 use uhid_sys as sys;
 
@@ -14,25 +15,12 @@ pub enum StreamError {
     Unknown,
 }
 
-struct DevFlags {
-    flags: u64,
-}
-
-impl DevFlags {
-    // const NUMBERED_FEATURE_REPORTS: DevFlags = 0b0000_0001;
-    // const NUMBERED_OUTPUT_REPORTS: DevFlags = 0b0000_0010;
-    // const NUMBERED_INPUT_REPORTS: DevFlags = 0b0000_0100;
-    fn feature_reports_numbered(&self) -> bool {
-        self.flags % 2 == 1
-    }
-
-    fn output_reports_numbered(&self) -> bool {
-        (self.flags >> 1) % 2 == 1
-    }
-
-    fn input_reports_numbered(&self) -> bool {
-        (self.flags >> 2) % 2 == 1
-    }
+#[derive(BitFlags, Copy, Clone, PartialEq)]
+#[repr(u64)]
+pub enum DevFlags {
+    FeatureReportsNumbered = 0b0000_0001,
+    OutputReportsNumbered = 0b0000_0010,
+    InputReportsNumbered = 0b0000_0100,
 }
 
 #[allow(non_camel_case_types)]
@@ -170,7 +158,7 @@ impl Into<sys::uhid_event> for InputEvent {
 
 pub enum OutputEvent {
     Start {
-        dev_flags: DevFlags,
+        dev_flags: Vec<DevFlags>,
     },
     Stop,
     Open,
@@ -199,7 +187,9 @@ impl TryFrom<sys::uhid_event> for OutputEvent {
                 sys::uhid_event_type_UHID_START => Ok(unsafe {
                     let payload = &event.u.start;
                     OutputEvent::Start {
-                        dev_flags: mem::transmute(payload.dev_flags),
+                        dev_flags: BitFlags::from_bits_truncate(payload.dev_flags)
+                            .iter()
+                            .collect(),
                     }
                 }),
                 sys::uhid_event_type_UHID_STOP => Ok(OutputEvent::Stop),

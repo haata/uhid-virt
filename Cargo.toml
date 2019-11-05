@@ -6,14 +6,17 @@ edition = "2018"
 description = "Interface to Linux UHID (user-space HID transport drivers)"
 repository = "https://github.com/sameer/uhid-fs"
 license = "MIT OR Apache-2.0"
+readme = "README.md"
 keywords = ["hid", "uhid", "linux", "userspace", "transport"]
 categories = ["os", "os::unix-apis"]
 exclude = [
-    ".travis.yml"
+    ".travis.yml",
+    "example/"
 ]
 
 [lib]
 doc = true
+test = true
 
 [dependencies]
 uhid-sys = "1"

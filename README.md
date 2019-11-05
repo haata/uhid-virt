@@ -2,6 +2,4 @@
 
 uhid-fs provides a safe wrapper around uhid-sys
 
-```rust
-
-```
+See the example folder for an example.

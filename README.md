@@ -8,7 +8,7 @@ UHID lets you write userspace drivers for HID devices in Linux. No need for a ke
 
 There are a lot of things you can do with this, to name a few:
 
-* Emulate a mouse/keyboard for shortcuts/macros/task automation
+* Emulate a mouse/keyboard for shortcuts/macros/task automation (independent of X11/Wayland/system console)
 * Add support for HID devices that are only supported on Windows / other platforms
 * Write drivers for a new HID device (i.e. [DIY Arduino water touchpad](https://www.open-electronics.org/guest_projects/diy-0-water-touchpad/))
 

@@ -2,7 +2,6 @@ use std::convert::TryFrom;
 use std::mem;
 use std::slice;
 
-use arrayvec::ArrayVec;
 use enumflags2::BitFlags;
 
 use uhid_sys as sys;
@@ -16,8 +15,8 @@ pub enum StreamError {
     UnknownEventType(u32),
 }
 
-/// Each of these flags defines whether a given report-type uses numbered reports. 
-/// If numbered reports are used for a type, all messages from the kernel already have the report-number as prefix. Otherwise, no prefix is added by the kernel. 
+/// Each of these flags defines whether a given report-type uses numbered reports.
+/// If numbered reports are used for a type, all messages from the kernel already have the report-number as prefix. Otherwise, no prefix is added by the kernel.
 /// For messages sent by user-space to the kernel, you must adjust the prefixes according to these flags.
 #[derive(BitFlags, Copy, Clone, PartialEq)]
 #[repr(u64)]
@@ -66,24 +65,15 @@ pub enum Bus {
 pub const UHID_EVENT_SIZE: usize = mem::size_of::<sys::uhid_event>();
 
 /// See https://www.kernel.org/doc/html/latest/hid/uhid.html#write
-pub enum InputEvent {
+pub enum InputEvent<'a> {
     Create(CreateParams),
     Destroy,
-    Input {
-        data: ArrayVec<[u8; sys::UHID_DATA_MAX as usize]>,
-    },
-    GetReportReply {
-        id: u32,
-        err: u16,
-        data: ArrayVec<[u8; sys::UHID_DATA_MAX as usize]>,
-    },
-    SetReportReply {
-        id: u32,
-        err: u16,
-    },
+    Input { data: &'a [u8] },
+    GetReportReply { id: u32, err: u16, data: Vec<u8> },
+    SetReportReply { id: u32, err: u16 },
 }
 
-impl Into<sys::uhid_event> for InputEvent {
+impl<'a> Into<sys::uhid_event> for InputEvent<'a> {
     fn into(self) -> sys::uhid_event {
         let mut event: sys::uhid_event = unsafe { mem::zeroed() };
 
@@ -247,14 +237,14 @@ impl TryFrom<sys::uhid_event> for OutputEvent {
     }
 }
 
-impl TryFrom<&[u8; UHID_EVENT_SIZE]> for OutputEvent {
+impl TryFrom<[u8; UHID_EVENT_SIZE]> for OutputEvent {
     type Error = StreamError;
-    fn try_from(src: &[u8; UHID_EVENT_SIZE]) -> Result<Self, Self::Error> {
+    fn try_from(src: [u8; UHID_EVENT_SIZE]) -> Result<Self, Self::Error> {
         OutputEvent::try_from(unsafe { *(src.as_ptr() as *const sys::uhid_event) })
     }
 }
 
-impl Into<[u8; UHID_EVENT_SIZE]> for InputEvent {
+impl<'a> Into<[u8; UHID_EVENT_SIZE]> for InputEvent<'a> {
     fn into(self) -> [u8; UHID_EVENT_SIZE] {
         let event: sys::uhid_event = self.into();
         unsafe { mem::transmute_copy(&event) }
@@ -264,7 +254,6 @@ impl Into<[u8; UHID_EVENT_SIZE]> for InputEvent {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use arrayvec::ArrayString;
 
     const RDESC: [u8; 85] = [
         0x05, 0x01, /* USAGE_PAGE (Generic Desktop) */
@@ -433,18 +422,16 @@ mod tests {
         expected[363] = 0x01;
         expected[364] = 0xc0;
 
-        let mut rd_data = ArrayVec::new();
-        RDESC.iter().for_each(|x| rd_data.try_push(*x).unwrap());
         let result: [u8; UHID_EVENT_SIZE] = InputEvent::Create(CreateParams {
-            name: ArrayString::from("test-uhid-device").unwrap(),
-            phys: ArrayString::from("").unwrap(),
-            uniq: ArrayString::from("").unwrap(),
+            name: String::from("test-uhid-device"),
+            phys: String::from(""),
+            uniq: String::from(""),
             bus: Bus::USB,
             vendor: 0x15d9,
             product: 0x0a37,
             version: 0,
             country: 0,
-            rd_data,
+            rd_data: RDESC.to_vec(),
         })
         .into();
 

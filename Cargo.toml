@@ -1,6 +1,6 @@
 [package]
 name = "uhid-virt"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["Luke Jones <luke@ljones.dev>", "Sameer Puri <purisame@spuri.io>", "Daniel Stiner <danstiner@gmail.com>"]
 edition = "2018"
 description = "Interface to Linux UHID (user-space HID transport drivers)"
@@ -19,6 +19,6 @@ doc = true
 test = true
 
 [dependencies]
-uhid-sys = "1"
+uhidrs-sys = "1.0"
 enumflags2 = "0.6"
 libc = "0.2"

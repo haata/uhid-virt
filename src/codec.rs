@@ -4,7 +4,7 @@ use std::slice;
 
 use enumflags2::BitFlags;
 
-use uhid_sys as sys;
+use uhidrs_sys as sys;
 
 use crate::uhid_device::CreateParams;
 
